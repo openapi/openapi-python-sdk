@@ -1,15 +1,20 @@
 [tool.poetry]
-name = "openapi-cli-python"
-version = "0.1.0"
-description = ""
+name = "openapi-python-sdk"
+version = "0.2.0"
+description = "A minimal Python SDK for the Openapi® API marketplace"
 authors = ["Michael Cuffaro <michael@cuffaro.com>"]
-readme = "README.md"
-packages = [{include = "openapi_cli_python"}]
+readme = "docs/readme-pypi.md"
+packages = [{include = "openapi_python_sdk"}]
 
 [tool.poetry.dependencies]
 python = "^3.10"
 httpx = "^0.24.0"
 
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.0"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
 
 [build-system]
 requires = ["poetry-core"]
