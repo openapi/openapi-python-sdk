@@ -6,11 +6,11 @@
   <h1>Openapi® client for Python</h1>
   <h4>The perfect starting point to integrate <a href="https://openapi.com/">Openapi®</a> within your Python project</h4>
 
-[![Build Status](https://github.com/openapi/openapi-python-sdk/actions/workflows/python.yml/badge.svg)](https://github.com/openapi/openapi-python-sdk/actions/workflows/python.yml)
-[![Packagist Version](https://img.shields.io/packagist/v/openapi/openapi-sdk)](https://packagist.org/packages/openapi/openapi-sdk)
-[![PyPI Version](https://img.shields.io/packagist/python-v/openapi/openapi-sdk)](https://packagist.org/packages/openapi/openapi-sdk)
-[![License](https://img.shields.io/github/license/openapi/openapi-python-sdk?v=2)](LICENSE)
-[![Downloads](https://img.shields.io/packagist/dt/openapi/openapi-sdk)](https://packagist.org/packages/openapi/openapi-sdk)
+[![Build](https://github.com/openapi/openapi-python-sdk/actions/workflows/python.yml/badge.svg)](https://github.com/openapi/openapi-python-sdk/actions/workflows/python.yml)
+[![PyPI Version](https://img.shields.io/pypi/v/openapi-python-sdk)](https://pypi.org/project/openapi-python-sdk/)
+[![Python Versions](https://img.shields.io/pypi/pyversions/openapi-python-sdk)](https://pypi.org/project/openapi-python-sdk/)
+[![License](https://img.shields.io/github/license/openapi/openapi-python-sdk)](LICENSE)
+[![Downloads](https://img.shields.io/pypi/dm/openapi-python-sdk)](https://pypi.org/project/openapi-python-sdk/)
 <br>
 [![Linux Foundation Member](https://img.shields.io/badge/Linux%20Foundation-Silver%20Member-003778?logo=linux-foundation&logoColor=white)](https://www.linuxfoundation.org/about/members)
 </div>
@@ -43,35 +43,27 @@ With the Openapi Python Client, you can easily interact with a variety of servic
 
 For a complete list of all available services, check out the [Openapi Marketplace](https://console.openapi.com/) 🌐
 
-# OpenApi IT Python Client 
-
-This client is used to interact with the API found at [openapi.it](https://openapi.it/)
-
-## Pre-requisites
-
-Before using the OpenApi IT Python Client, you will need an account at [openapi.it](https://openapi.it/) and an API key to the sandbox and/or production environment
 
 ## Installation
 
-You can install the OpenApi IT Python Client with the following command using go get:
-
 ```bash
-pip install openapi-cli-python
+pip install openapi-python-sdk
 ```
-    
+
 ## Usage
 
+Interaction with the Openapi platform happens in two distinct steps.
+
+### Step 1 — Generate a token
+
+Authenticate with your credentials and obtain a short-lived bearer token scoped to the endpoints you need.
 
 ```python
-from openapi.client import Client, OauthClient
+from openapi_python_sdk.client import OauthClient
 
-# Initialize the oauth client on the sandbox environment
-oauth_client = OauthClient(
-    username="<your_username>", apikey="<your_apikey>", test=True
-)
+oauth = OauthClient(username="<your_username>", apikey="<your_apikey>", test=True)
 
-# Create a token for a list of scopes
-resp = oauth_client.create_token(
+resp = oauth.create_token(
     scopes=[
         "GET:test.imprese.openapi.it/advance",
         "POST:test.postontarget.com/fields/country",
@@ -80,25 +72,48 @@ resp = oauth_client.create_token(
 )
 token = resp["token"]
 
-# Initialize the client
+# Revoke the token when done
+oauth.delete_token(id=token)
+```
+
+### Step 2 — Call an API endpoint
+
+Use the token to make authenticated requests to any Openapi service.
+
+```python
+from openapi_python_sdk.client import Client
+
 client = Client(token=token)
 
-# Make a request with params
+# GET with query params
 resp = client.request(
     method="GET",
     url="https://test.imprese.openapi.it/advance",
     params={"denominazione": "altravia", "provincia": "RM", "codice_ateco": "6201"},
 )
 
-# Make a request with a payload
+# POST with a JSON payload
 resp = client.request(
     method="POST",
     url="https://test.postontarget.com/fields/country",
-    payload={"limit": 0, "query": { "country_code": "IT"}}
+    payload={"limit": 0, "query": {"country_code": "IT"}},
 )
+```
 
-# Delete the token
-resp = oauth_client.delete_token(id=token)
+## Testing
+
+Install dev dependencies and run the test suite:
+
+```bash
+pip install pytest
+pytest
+```
+
+Or with Poetry:
+
+```bash
+poetry install
+poetry run pytest
 ```
 
 
