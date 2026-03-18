@@ -14,14 +14,13 @@
 #                                                                             #
 #   ═══════════════════════════════════════════════════════════════════════   #
 #                                                                             #
-#   Project:        openapi-rust-sdk                                          #
-#   Version:        0.1.0                                                     #
+#   Project:        openapi-python-sdk                                        #
 #   Author:         Michael Cuffaro (@maiku1008)                              #
 #   Copyright:      (c) 2025 Openapi®. All rights reserved.                   #
 #   License:        MIT                                                       #
 #   Maintainer:     Francesco Bianco                                          #
 #   Contact:        https://openapi.com/                                      #
-#   Repository:     https://github.com/openapi/openapi-php-sdk/               #
+#   Repository:     https://github.com/openapi-it/openapi-python-sdk/         #
 #   Documentation:  https://console.openapi.com/                              #
 #                                                                             #
 #   ═══════════════════════════════════════════════════════════════════════   #
@@ -35,7 +34,8 @@
 ## Variables
 ## =========
 
-VERSION := 1.2.1
+export PATH := $(HOME)/.local/bin:$(PATH)
+VERSION := $(shell grep '^version' pyproject.toml | head -1 | sed 's/.*"\(.*\)".*/\1/')
 
 ## ====================
 ## Development Commands
@@ -51,13 +51,22 @@ dev-push:
 ## Release Commands
 ## ================
 
-push:
-	@git add .
-	@git commit -am "Updated at $$(date)" || true
-	@git push
+.PHONY: setup build publish release
 
-release: push
-	@git add .
-	@git commit -m "Update PHP SDK to version ${VERSION}" || echo "No changes to commit"
-	@git tag -fa "${VERSION}" -m "${VERSION}"
+setup:
+	@poetry --version > /dev/null 2>&1 || \
+		(echo "Installing Poetry..." && curl -sSL https://install.python-poetry.org | python3 -)
+
+build: setup
+	@echo "Building version $(VERSION)..."
+	@poetry build
+
+publish: build
+	@echo "Publishing version $(VERSION) to PyPI..."
+	@poetry publish
+
+release: publish
+	@echo "Tagging release $(VERSION)..."
+	@git tag -fa "$(VERSION)" -m "Release $(VERSION)"
 	@git push origin --tags -f
+	@echo "Released $(VERSION) successfully."
