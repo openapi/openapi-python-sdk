@@ -3,6 +3,8 @@ from typing import Any, Dict
 
 import httpx
 
+import json
+
 OAUTH_BASE_URL = "https://oauth.openapi.it"
 TEST_OAUTH_BASE_URL = "https://test.oauth.openapi.it"
 
@@ -62,10 +64,17 @@ class Client:
         payload = payload or {}
         params = params or {}
         url = url or ""
-        return self.client.request(
+        data = self.client.request(
             method=method,
             url=url,
             headers=self.headers,
             json=payload,
             params=params,
         ).json()
+
+        if isinstance(data,str):
+            try:
+                data=json.loads(data)
+            except json.JSONDecodeError:
+                pass
+        return data
