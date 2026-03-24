@@ -47,6 +47,16 @@ dev-push:
 	@git commit -m "$$(read -p 'Commit message: ' msg; echo $$msg)" || true
 	@git push
 
+## ==================
+## Quality Assurance
+## ==================
+
+.PHONY: lint
+
+lint:
+	@echo "Running ruff linter..."
+	@poetry run ruff check .
+
 ## ================
 ## Release Commands
 ## ================
