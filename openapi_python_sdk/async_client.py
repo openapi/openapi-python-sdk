@@ -3,38 +3,34 @@ from typing import Any, Dict
 
 import httpx
 
-# Backward compatibility imports
-from .async_client import AsyncClient
-from .async_oauth_client import AsyncOauthClient
-from .oauth_client import OauthClient
 
-
-class Client:
+class AsyncClient:
     """
-    Synchronous client for making authenticated requests to Openapi endpoints.
+    Asynchronous client for making authenticated requests to Openapi endpoints.
+    Suitable for use with FastAPI, aiohttp, etc.
     """
 
     def __init__(self, token: str):
-        self.client = httpx.Client()
+        self.client = httpx.AsyncClient()
         self.auth_header: str = f"Bearer {token}"
         self.headers: Dict[str, str] = {
             "Authorization": self.auth_header,
             "Content-Type": "application/json",
         }
 
-    def __enter__(self):
-        """Enable use as a synchronous context manager."""
+    async def __aenter__(self):
+        """Enable use as an asynchronous context manager."""
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        """Ensure the underlying HTTP client is closed on exit."""
-        self.client.close()
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        """Ensure the underlying HTTP client is closed on exit (async)."""
+        await self.client.aclose()
 
-    def close(self):
-        """Manually close the underlying HTTP client."""
-        self.client.close()
+    async def aclose(self):
+        """Manually close the underlying HTTP client (async)."""
+        await self.client.aclose()
 
-    def request(
+    async def request(
         self,
         method: str = "GET",
         url: str = None,
@@ -42,18 +38,19 @@ class Client:
         params: Dict[str, Any] = None,
     ) -> Dict[str, Any]:
         """
-        Make a synchronous HTTP request to the specified Openapi endpoint.
+        Make an asynchronous HTTP request to the specified Openapi endpoint.
         """
         payload = payload or {}
         params = params or {}
         url = url or ""
-        data = self.client.request(
+        resp = await self.client.request(
             method=method,
             url=url,
             headers=self.headers,
             json=payload,
             params=params,
-        ).json()
+        )
+        data = resp.json()
 
         # Handle cases where the API might return a JSON-encoded string instead of an object
         if isinstance(data, str):
