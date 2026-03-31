@@ -4,9 +4,9 @@ from typing import Any, Dict
 import httpx
 
 # Backward compatibility imports
-from .async_client import AsyncClient
-from .async_oauth_client import AsyncOauthClient
-from .oauth_client import OauthClient
+from .async_client import AsyncClient  # noqa: F401
+from .async_oauth_client import AsyncOauthClient  # noqa: F401
+from .oauth_client import OauthClient  # noqa: F401
 
 
 class Client:
@@ -61,5 +61,4 @@ class Client:
                 data = json.loads(data)
             except json.JSONDecodeError:
                 pass
-
         return data
