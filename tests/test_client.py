@@ -103,7 +103,7 @@ class TestClient(unittest.TestCase):
         mock_httpx.return_value.request.return_value = mock_resp
 
         client = Client(token="tok")
-        resp = client.request()
+        client.request()
 
         mock_httpx.return_value.request.assert_called_once_with(
             method="GET", url="", headers=client.headers, json={}, params={}

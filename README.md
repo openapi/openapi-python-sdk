@@ -26,9 +26,10 @@ Before using the Openapi Python Client, you will need an account at [Openapi](ht
 ## Features
 
 - **Agnostic Design**: No API-specific classes, works with any OpenAPI service
-- **Minimal Dependencies**: Only requires Python 3.8+ and `requests`
+- **Minimal Dependencies**: Only requires Python 3.8+ and `httpx`
 - **OAuth Support**: Built-in OAuth client for token management
 - **HTTP Primitives**: GET, POST, PUT, DELETE, PATCH methods
+- **Async Support**: Fully compatible with async frameworks like FastAPI and aiohttp
 - **Clean Interface**: Similar to the Rust SDK design
 
 ## What you can do
@@ -70,7 +71,7 @@ Interaction with the Openapi platform happens in two distinct steps.
 Authenticate with your credentials and obtain a short-lived bearer token scoped to the endpoints you need.
 
 ```python
-from openapi_python_sdk.client import OauthClient
+from openapi_python_sdk import OauthClient
 
 oauth = OauthClient(username="<your_username>", apikey="<your_apikey>", test=True)
 
@@ -92,7 +93,7 @@ oauth.delete_token(id=token)
 Use the token to make authenticated requests to any Openapi service.
 
 ```python
-from openapi_python_sdk.client import Client
+from openapi_python_sdk import Client
 
 client = Client(token=token)
 
@@ -110,6 +111,37 @@ resp = client.request(
     payload={"limit": 0, "query": {"country_code": "IT"}},
 )
 ```
+
+## Async Usage
+
+The SDK provides `AsyncClient` and `AsyncOauthClient` for use with asynchronous frameworks like FastAPI or `aiohttp`.
+
+### Async Authentication
+
+```python
+from openapi_python_sdk import AsyncOauthClient
+
+async with AsyncOauthClient(username="<your_username>", apikey="<your_apikey>", test=True) as oauth:
+    resp = await oauth.create_token(
+        scopes=["GET:test.imprese.openapi.it/advance"],
+        ttl=3600,
+    )
+    token = resp["token"]
+```
+
+### Async Requests
+
+```python
+from openapi_python_sdk import AsyncClient
+
+async with AsyncClient(token=token) as client:
+    resp = await client.request(
+        method="GET",
+        url="https://test.imprese.openapi.it/advance",
+        params={"denominazione": "altravia"},
+    )
+```
+
 
 ## Testing
 
@@ -174,4 +206,3 @@ The MIT License is a permissive open-source license that allows you to freely us
 In short, you are free to use this SDK in your personal, academic, or commercial projects, with minimal restrictions. The project is provided "as-is", without any warranty of any kind, either expressed or implied, including but not limited to the warranties of merchantability, fitness for a particular purpose, and non-infringement.
 
 For more details, see the full license text at the [MIT License page](https://choosealicense.com/licenses/mit/).
-
