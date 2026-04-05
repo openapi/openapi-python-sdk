@@ -112,6 +112,26 @@ resp = client.request(
 )
 ```
 
+### Customizing the Transport Layer
+
+If you need to configure custom retry logic, proxies, or use a different HTTP client (such as passing a `requests.Session` with a custom urllib3 `Retry`), you can inject it directly using the `client` parameter on any SDK class:
+
+```python
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
+from openapi_python_sdk import Client
+import requests
+
+retry = Retry(total=3)
+adapter = HTTPAdapter(max_retries=retry)
+
+session = requests.Session()
+session.mount("https://", adapter)
+
+# Pass the custom session to the Client explicitly
+client = Client("token", client=session)
+```
+
 ## Async Usage
 
 The SDK provides `AsyncClient` and `AsyncOauthClient` for use with asynchronous frameworks like FastAPI or `aiohttp`.

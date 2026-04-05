@@ -56,6 +56,11 @@ class TestOauthClient(unittest.TestCase):
         oauth = OauthClient(username="user", apikey="key")
         self.assertTrue(oauth.auth_header.startswith("Basic "))
 
+    def test_custom_client_transport(self):
+        custom_client = MagicMock()
+        oauth = OauthClient(username="user", apikey="key", client=custom_client)
+        self.assertEqual(oauth.client, custom_client)
+
 
 class TestClient(unittest.TestCase):
 
@@ -108,6 +113,11 @@ class TestClient(unittest.TestCase):
         mock_httpx.return_value.request.assert_called_once_with(
             method="GET", url="", headers=client.headers, json={}, params={}
         )
+
+    def test_custom_client_transport(self):
+        custom_client = MagicMock()
+        client = Client(token="tok", client=custom_client)
+        self.assertEqual(client.client, custom_client)
 
 
 if __name__ == "__main__":
