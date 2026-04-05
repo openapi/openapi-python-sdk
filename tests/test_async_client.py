@@ -42,6 +42,11 @@ class TestAsyncOauthClient(unittest.IsolatedAsyncioTestCase):
         await oauth.aclose()
         mock_httpx.return_value.aclose.assert_called_once()
 
+    def test_custom_client_transport(self):
+        custom_client = MagicMock()
+        oauth = AsyncOauthClient(username="user", apikey="key", client=custom_client)
+        self.assertEqual(oauth.client, custom_client)
+
 
 class TestAsyncClient(unittest.IsolatedAsyncioTestCase):
     """
@@ -84,6 +89,11 @@ class TestAsyncClient(unittest.IsolatedAsyncioTestCase):
         # Ensure cleanup
         await client.aclose()
         mock_httpx.return_value.aclose.assert_called_once()
+
+    def test_custom_client_transport(self):
+        custom_client = MagicMock()
+        client = AsyncClient(token="abc123", client=custom_client)
+        self.assertEqual(client.client, custom_client)
 
 
 if __name__ == "__main__":
