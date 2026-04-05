@@ -47,6 +47,13 @@ class Client:
         payload = payload or {}
         params = params or {}
         url = url or ""
+
+        if params:
+            import urllib.parse
+            query_string = urllib.parse.urlencode(params, doseq=True)
+            url = f"{url}&{query_string}" if "?" in url else f"{url}?{query_string}"
+            params = None
+
         data = self.client.request(
             method=method,
             url=url,
