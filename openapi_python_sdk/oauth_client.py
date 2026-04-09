@@ -1,4 +1,5 @@
 import base64
+import threading
 from typing import Any, Dict, List
 
 import httpx
@@ -13,7 +14,8 @@ class OauthClient:
     """
 
     def __init__(self, username: str, apikey: str, test: bool = False, client: Any = None):
-        self.client = client if client is not None else httpx.Client()
+        self._client = client
+        self._thread_local = threading.local()
         self.url: str = TEST_OAUTH_BASE_URL if test else OAUTH_BASE_URL
         self.auth_header: str = (
             "Basic " + base64.b64encode(f"{username}:{apikey}".encode("utf-8")).decode()
@@ -22,6 +24,24 @@ class OauthClient:
             "Authorization": self.auth_header,
             "Content-Type": "application/json",
         }
+
+    @property
+    def client(self) -> Any:
+        """
+        Thread-safe access to the underlying HTTP client.
+        If a custom client was provided at initialization, it is returned.
+        Otherwise, a thread-local httpx.Client is created and returned.
+        """
+        if self._client is not None:
+            return self._client
+        
+        if not hasattr(self._thread_local, "client"):
+            self._thread_local.client = httpx.Client()
+        return self._thread_local.client
+
+    @client.setter
+    def client(self, value: Any):
+        self._client = value
 
     def __enter__(self):
         """Enable use as a synchronous context manager."""
