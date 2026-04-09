@@ -1,7 +1,10 @@
 import threading
 import unittest
-from openapi_python_sdk import Client, OauthClient
+
 import httpx
+
+from openapi_python_sdk import Client, OauthClient
+
 
 class TestThreadSafety(unittest.TestCase):
     def test_oauth_client_thread_safety(self):

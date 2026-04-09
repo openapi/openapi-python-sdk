@@ -34,7 +34,6 @@ class OauthClient:
         """
         if self._client is not None:
             return self._client
-
         if not hasattr(self._thread_local, "client"):
             self._thread_local.client = httpx.Client()
         return self._thread_local.client
