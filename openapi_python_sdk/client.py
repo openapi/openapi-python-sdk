@@ -1,4 +1,5 @@
 import json
+import threading
 from typing import Any, Dict
 
 import httpx
@@ -15,12 +16,31 @@ class Client:
     """
 
     def __init__(self, token: str, client: Any = None):
-        self.client = client if client is not None else httpx.Client()
+        self._client = client
+        self._thread_local = threading.local()
         self.auth_header: str = f"Bearer {token}"
         self.headers: Dict[str, str] = {
             "Authorization": self.auth_header,
             "Content-Type": "application/json",
         }
+
+    @property
+    def client(self) -> Any:
+        """
+        Thread-safe access to the underlying HTTP client.
+        If a custom client was provided at initialization, it is returned.
+        Otherwise, a thread-local httpx.Client is created and returned.
+        """
+        if self._client is not None:
+            return self._client
+
+        if not hasattr(self._thread_local, "client"):
+            self._thread_local.client = httpx.Client()
+        return self._thread_local.client
+
+    @client.setter
+    def client(self, value: Any):
+        self._client = value
 
     def __enter__(self):
         """Enable use as a synchronous context manager."""
