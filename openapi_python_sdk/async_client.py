@@ -10,8 +10,8 @@ class AsyncClient:
     Suitable for use with FastAPI, aiohttp, etc.
     """
 
-    def __init__(self, token: str):
-        self.client = httpx.AsyncClient()
+    def __init__(self, token: str, client: Any = None):
+        self.client = client if client is not None else httpx.AsyncClient()
         self.auth_header: str = f"Bearer {token}"
         self.headers: Dict[str, str] = {
             "Authorization": self.auth_header,
@@ -43,6 +43,13 @@ class AsyncClient:
         payload = payload or {}
         params = params or {}
         url = url or ""
+
+        if params:
+            import urllib.parse
+            query_string = urllib.parse.urlencode(params, doseq=True)
+            url = f"{url}&{query_string}" if "?" in url else f"{url}?{query_string}"
+            params = None
+
         resp = await self.client.request(
             method=method,
             url=url,
