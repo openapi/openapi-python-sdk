@@ -60,6 +60,16 @@ resp = client.request(
 )
 ```
 
+### Configuring Network Timeouts
+
+By default, the SDK uses a 30-second timeout for all network requests. You can easily override it passing a `timeout` explicitly during initialization:
+
+```python
+from openapi_python_sdk.client import Client
+
+client = Client(token="token", timeout=60.0) # 60 seconds
+```
+
 ## Testing
 
 ```bash
@@ -71,7 +81,7 @@ pytest
 
 | Method | Description |
 |---|---|
-| `OauthClient(username, apikey, test=False)` | Initialize the OAuth client. Set `test=True` for sandbox. |
+| `OauthClient(username, apikey, test=False, timeout=30.0)` | Initialize the OAuth client. Set `test=True` for sandbox. |
 | `create_token(scopes, ttl)` | Create a bearer token for the given scopes and TTL (seconds). |
 | `get_token(scope)` | Retrieve an existing token by scope. |
 | `delete_token(id)` | Revoke a token by ID. |
@@ -82,7 +92,7 @@ pytest
 
 | Method | Description |
 |---|---|
-| `Client(token)` | Initialize the client with a bearer token. |
+| `Client(token, timeout=30.0)` | Initialize the client with a bearer token. |
 | `request(method, url, payload, params)` | Execute an HTTP request against any Openapi endpoint. |
 
 ## Links
