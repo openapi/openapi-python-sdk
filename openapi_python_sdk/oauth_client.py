@@ -12,8 +12,8 @@ class OauthClient:
     Synchronous client for handling Openapi authentication and token management.
     """
 
-    def __init__(self, username: str, apikey: str, test: bool = False, client: Any = None):
-        self.client = client if client is not None else httpx.Client()
+    def __init__(self, username: str, apikey: str, test: bool = False, client: Any = None, timeout: float = 30.0):
+        self.client = client if client is not None else httpx.Client(timeout=timeout)
         self.url: str = TEST_OAUTH_BASE_URL if test else OAUTH_BASE_URL
         self.auth_header: str = (
             "Basic " + base64.b64encode(f"{username}:{apikey}".encode("utf-8")).decode()

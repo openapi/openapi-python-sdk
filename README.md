@@ -132,6 +132,18 @@ session.mount("https://", adapter)
 client = Client("token", client=session)
 ```
 
+### Configuring Network Timeouts
+
+By default, the SDK uses a 30-second timeout for all network requests to avoid hanging on slow network connections or heavy API operations. 
+
+You can easily override it passing a `timeout` explicitly during initialization to all client variants:
+
+```python
+from openapi_python_sdk import Client
+
+client = Client(token="token", timeout=60.0) # 60 seconds
+```
+
 ## Async Usage
 
 The SDK provides `AsyncClient` and `AsyncOauthClient` for use with asynchronous frameworks like FastAPI or `aiohttp`.

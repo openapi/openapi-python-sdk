@@ -14,8 +14,8 @@ class Client:
     Synchronous client for making authenticated requests to Openapi endpoints.
     """
 
-    def __init__(self, token: str, client: Any = None):
-        self.client = client if client is not None else httpx.Client()
+    def __init__(self, token: str, client: Any = None, timeout: float = 30.0):
+        self.client = client if client is not None else httpx.Client(timeout=timeout)
         self.auth_header: str = f"Bearer {token}"
         self.headers: Dict[str, str] = {
             "Authorization": self.auth_header,
