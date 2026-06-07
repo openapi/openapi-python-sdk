@@ -1,4 +1,6 @@
+import asyncio
 import base64
+import random
 from typing import Any, Dict, List
 
 import httpx
@@ -12,8 +14,23 @@ class AsyncOauthClient:
     Suitable for use with FastAPI, aiohttp, etc.
     """
 
-    def __init__(self, username: str, apikey: str, test: bool = False, client: Any = None, timeout: float = 30.0):
+    def __init__(
+        self,
+        username: str,
+        apikey: str,
+        test: bool = False,
+        client: Any = None,
+        timeout: float = 30.0,
+        max_retries: int = 0,
+        backoff_factor: float = 1.0,
+        retry_on_status: List[int] = None,
+    ):
         self.client = client if client is not None else httpx.AsyncClient(timeout=timeout)
+        self.max_retries = max_retries
+        self.backoff_factor = backoff_factor
+        self.retry_on_status = (
+            retry_on_status if retry_on_status is not None else [429, 502, 503, 504]
+        )
         self.url: str = TEST_OAUTH_BASE_URL if test else OAUTH_BASE_URL
         self.auth_header: str = (
             "Basic " + base64.b64encode(f"{username}:{apikey}".encode("utf-8")).decode()
@@ -35,35 +52,61 @@ class AsyncOauthClient:
         """Manually close the underlying HTTP client (async)."""
         await self.client.aclose()
 
+    async def _request_with_retry(self, request_fn, *args, **kwargs) -> httpx.Response:
+        attempts = 0
+        while True:
+            try:
+                resp = await request_fn(*args, **kwargs)
+                if resp.status_code in self.retry_on_status and attempts < self.max_retries:
+                    attempts += 1
+                    sleep_time = self.backoff_factor * (2 ** attempts) + random.uniform(0, 0.5)
+                    if resp.status_code == 429:
+                        retry_after = resp.headers.get("Retry-After")
+                        if retry_after:
+                            try:
+                                sleep_time = float(retry_after)
+                            except ValueError:
+                                pass
+                    await asyncio.sleep(sleep_time)
+                    continue
+                return resp
+            except httpx.RequestError as exc:
+                if attempts < self.max_retries:
+                    attempts += 1
+                    sleep_time = self.backoff_factor * (2 ** attempts) + random.uniform(0, 0.5)
+                    await asyncio.sleep(sleep_time)
+                    continue
+                raise exc
+
     async def get_scopes(self, limit: bool = False) -> Dict[str, Any]:
         """Retrieve available scopes for the current user (async)."""
         params = {"limit": int(limit)}
         url = f"{self.url}/scopes"
-        resp = await self.client.get(url=url, headers=self.headers, params=params)
+        resp = await self._request_with_retry(self.client.get, url=url, headers=self.headers, params=params)
         return resp.json()
 
     async def create_token(self, scopes: List[str] = [], ttl: int = 0) -> Dict[str, Any]:
         """Create a new bearer token with specified scopes and TTL (async)."""
         payload = {"scopes": scopes, "ttl": ttl}
         url = f"{self.url}/token"
-        resp = await self.client.post(url=url, headers=self.headers, json=payload)
+        resp = await self._request_with_retry(self.client.post, url=url, headers=self.headers, json=payload)
         return resp.json()
 
     async def get_token(self, scope: str = None) -> Dict[str, Any]:
         """Retrieve an existing token, optionally filtered by scope (async)."""
         params = {"scope": scope or ""}
         url = f"{self.url}/token"
-        resp = await self.client.get(url=url, headers=self.headers, params=params)
+        resp = await self._request_with_retry(self.client.get, url=url, headers=self.headers, params=params)
         return resp.json()
 
     async def delete_token(self, id: str) -> Dict[str, Any]:
         """Revoke/Delete a specific token by ID (async)."""
         url = f"{self.url}/token/{id}"
-        resp = await self.client.delete(url=url, headers=self.headers)
+        resp = await self._request_with_retry(self.client.delete, url=url, headers=self.headers)
         return resp.json()
 
     async def get_counters(self, period: str, date: str) -> Dict[str, Any]:
         """Retrieve usage counters for a specific period and date (async)."""
         url = f"{self.url}/counters/{period}/{date}"
-        resp = await self.client.get(url=url, headers=self.headers)
+        resp = await self._request_with_retry(self.client.get, url=url, headers=self.headers)
         return resp.json()

@@ -1,4 +1,6 @@
+import asyncio
 import json
+import random
 from typing import Any, Dict
 
 import httpx
@@ -10,8 +12,21 @@ class AsyncClient:
     Suitable for use with FastAPI, aiohttp, etc.
     """
 
-    def __init__(self, token: str, client: Any = None, timeout: float = 30.0):
+    def __init__(
+        self,
+        token: str,
+        client: Any = None,
+        timeout: float = 30.0,
+        max_retries: int = 0,
+        backoff_factor: float = 1.0,
+        retry_on_status: list[int] = None,
+    ):
         self.client = client if client is not None else httpx.AsyncClient(timeout=timeout)
+        self.max_retries = max_retries
+        self.backoff_factor = backoff_factor
+        self.retry_on_status = (
+            retry_on_status if retry_on_status is not None else [429, 502, 503, 504]
+        )
         self.auth_header: str = f"Bearer {token}"
         self.headers: Dict[str, str] = {
             "Authorization": self.auth_header,
@@ -29,6 +44,32 @@ class AsyncClient:
     async def aclose(self):
         """Manually close the underlying HTTP client (async)."""
         await self.client.aclose()
+
+    async def _request_with_retry(self, request_fn, *args, **kwargs) -> httpx.Response:
+        attempts = 0
+        while True:
+            try:
+                resp = await request_fn(*args, **kwargs)
+                if resp.status_code in self.retry_on_status and attempts < self.max_retries:
+                    attempts += 1
+                    sleep_time = self.backoff_factor * (2 ** attempts) + random.uniform(0, 0.5)
+                    if resp.status_code == 429:
+                        retry_after = resp.headers.get("Retry-After")
+                        if retry_after:
+                            try:
+                                sleep_time = float(retry_after)
+                            except ValueError:
+                                pass
+                    await asyncio.sleep(sleep_time)
+                    continue
+                return resp
+            except httpx.RequestError as exc:
+                if attempts < self.max_retries:
+                    attempts += 1
+                    sleep_time = self.backoff_factor * (2 ** attempts) + random.uniform(0, 0.5)
+                    await asyncio.sleep(sleep_time)
+                    continue
+                raise exc
 
     async def request(
         self,
@@ -50,7 +91,8 @@ class AsyncClient:
             url = f"{url}&{query_string}" if "?" in url else f"{url}?{query_string}"
             params = None
 
-        resp = await self.client.request(
+        resp = await self._request_with_retry(
+            self.client.request,
             method=method,
             url=url,
             headers=self.headers,

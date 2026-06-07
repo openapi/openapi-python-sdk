@@ -1,5 +1,7 @@
 import json
+import random
 import threading
+import time
 from typing import Any, Dict
 
 import httpx
@@ -15,10 +17,23 @@ class Client:
     Synchronous client for making authenticated requests to Openapi endpoints.
     """
 
-    def __init__(self, token: str, client: Any = None, timeout: float = 30.0):
+    def __init__(
+        self,
+        token: str,
+        client: Any = None,
+        timeout: float = 30.0,
+        max_retries: int = 0,
+        backoff_factor: float = 1.0,
+        retry_on_status: list[int] = None,
+    ):
         self._client = client
         self._thread_local = threading.local()
         self.timeout = timeout
+        self.max_retries = max_retries
+        self.backoff_factor = backoff_factor
+        self.retry_on_status = (
+            retry_on_status if retry_on_status is not None else [429, 502, 503, 504]
+        )
         self.auth_header: str = f"Bearer {token}"
         self.headers: Dict[str, str] = {
             "Authorization": self.auth_header,
@@ -55,6 +70,32 @@ class Client:
         """Manually close the underlying HTTP client."""
         self.client.close()
 
+    def _request_with_retry(self, request_fn, *args, **kwargs) -> httpx.Response:
+        attempts = 0
+        while True:
+            try:
+                resp = request_fn(*args, **kwargs)
+                if resp.status_code in self.retry_on_status and attempts < self.max_retries:
+                    attempts += 1
+                    sleep_time = self.backoff_factor * (2 ** attempts) + random.uniform(0, 0.5)
+                    if resp.status_code == 429:
+                        retry_after = resp.headers.get("Retry-After")
+                        if retry_after:
+                            try:
+                                sleep_time = float(retry_after)
+                            except ValueError:
+                                pass
+                    time.sleep(sleep_time)
+                    continue
+                return resp
+            except httpx.RequestError as exc:
+                if attempts < self.max_retries:
+                    attempts += 1
+                    sleep_time = self.backoff_factor * (2 ** attempts) + random.uniform(0, 0.5)
+                    time.sleep(sleep_time)
+                    continue
+                raise exc
+
     def request(
         self,
         method: str = "GET",
@@ -75,13 +116,15 @@ class Client:
             url = f"{url}&{query_string}" if "?" in url else f"{url}?{query_string}"
             params = None
 
-        data = self.client.request(
+        resp = self._request_with_retry(
+            self.client.request,
             method=method,
             url=url,
             headers=self.headers,
             json=payload,
             params=params,
-        ).json()
+        )
+        data = resp.json()
 
         # Handle cases where the API might return a JSON-encoded string instead of an object
         if isinstance(data, str):
