@@ -10,7 +10,7 @@ Usage:
 
 import os
 
-from openapi_python_sdk.client import OauthClient
+from openapi_sdk.client import OauthClient
 
 username = os.environ.get("OPENAPI_USERNAME", "<your_username>")
 apikey = os.environ.get("OPENAPI_APIKEY", "<your_apikey>")
