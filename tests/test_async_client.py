@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from openapi_python_sdk.client import AsyncClient, AsyncOauthClient
+from openapi_sdk.client import AsyncClient, AsyncOauthClient
 
 
 class TestAsyncOauthClient(unittest.IsolatedAsyncioTestCase):
@@ -10,7 +10,7 @@ class TestAsyncOauthClient(unittest.IsolatedAsyncioTestCase):
     which allows for native await calls in test methods.
     """
 
-    @patch("openapi_python_sdk.client.httpx.AsyncClient")
+    @patch("openapi_sdk.client.httpx.AsyncClient")
     async def test_create_token(self, mock_httpx):
         # Mocking the response and the post method
         mock_resp = MagicMock()
@@ -27,7 +27,7 @@ class TestAsyncOauthClient(unittest.IsolatedAsyncioTestCase):
         # Verify aclose was called by the context manager
         mock_httpx.return_value.aclose.assert_called_once()
 
-    @patch("openapi_python_sdk.client.httpx.AsyncClient")
+    @patch("openapi_sdk.client.httpx.AsyncClient")
     async def test_get_scopes(self, mock_httpx):
         mock_resp = MagicMock()
         mock_resp.json.return_value = {"scopes": ["GET:test.example.com/api"]}
@@ -53,7 +53,7 @@ class TestAsyncClient(unittest.IsolatedAsyncioTestCase):
     Test suite for the generic AsyncClient.
     """
 
-    @patch("openapi_python_sdk.client.httpx.AsyncClient")
+    @patch("openapi_sdk.client.httpx.AsyncClient")
     async def test_request_get(self, mock_httpx):
         mock_resp = MagicMock()
         mock_resp.json.return_value = {"data": []}
@@ -71,7 +71,7 @@ class TestAsyncClient(unittest.IsolatedAsyncioTestCase):
         mock_httpx.return_value.request.assert_called_once()
         mock_httpx.return_value.aclose.assert_called_once()
 
-    @patch("openapi_python_sdk.client.httpx.AsyncClient")
+    @patch("openapi_sdk.client.httpx.AsyncClient")
     async def test_request_post(self, mock_httpx):
         mock_resp = MagicMock()
         mock_resp.json.return_value = {"result": "ok"}

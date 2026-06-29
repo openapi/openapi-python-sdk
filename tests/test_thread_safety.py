@@ -3,7 +3,7 @@ import unittest
 
 import httpx
 
-from openapi_python_sdk import Client, OauthClient
+from openapi_sdk import Client, OauthClient
 
 
 class TestThreadSafety(unittest.TestCase):

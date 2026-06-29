@@ -1,10 +1,10 @@
 [tool.poetry]
-name = "openapi-python-sdk"
+name = "openapi-sdk"
 version = "0.3.0"
 description = "A minimal Python SDK for the Openapi® API marketplace"
 authors = ["Michael Cuffaro <michael@cuffaro.com>"]
 readme = "docs/readme-pypi.md"
-packages = [{include = "openapi_python_sdk"}]
+packages = [{include = "openapi_sdk"}]
 
 [tool.poetry.dependencies]
 python = "^3.10"

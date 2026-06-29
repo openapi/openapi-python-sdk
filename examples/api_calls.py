@@ -10,7 +10,7 @@ Usage:
 
 import os
 
-from openapi_python_sdk.client import Client
+from openapi_sdk.client import Client
 
 token = os.environ.get("OPENAPI_TOKEN", "<your_token>")
 

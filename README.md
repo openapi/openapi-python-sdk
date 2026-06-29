@@ -7,10 +7,10 @@
   <h4>The perfect starting point to integrate <a href="https://openapi.com/">Openapi®</a> within your Python project</h4>
 
 [![Build](https://github.com/openapi/openapi-python-sdk/actions/workflows/python.yml/badge.svg)](https://github.com/openapi/openapi-python-sdk/actions/workflows/python.yml)
-[![PyPI Version](https://img.shields.io/pypi/v/openapi-python-sdk)](https://pypi.org/project/openapi-python-sdk/)
-[![Python Versions](https://img.shields.io/badge/python-%3E%3D3.10-blue)](https://pypi.org/project/openapi-python-sdk/)
+[![PyPI Version](https://img.shields.io/pypi/v/openapi-sdk)](https://pypi.org/project/openapi-sdk/)
+[![Python Versions](https://img.shields.io/badge/python-%3E%3D3.10-blue)](https://pypi.org/project/openapi-sdk/)
 [![License](https://img.shields.io/github/license/openapi/openapi-python-sdk)](LICENSE)
-[![Downloads](https://img.shields.io/pypi/dm/openapi-python-sdk)](https://pypi.org/project/openapi-python-sdk/)
+[![Downloads](https://img.shields.io/pypi/dm/openapi-sdk)](https://pypi.org/project/openapi-sdk/)
 <br>
 [![Linux Foundation Member](https://img.shields.io/badge/Linux%20Foundation-Silver%20Member-003778?logo=linux-foundation&logoColor=white)](https://www.linuxfoundation.org/about/members)
 </div>
@@ -47,17 +47,17 @@ For a complete list of all available services, check out the [Openapi Marketplac
 
 ## Installation
 
-The package is available on [PyPI](https://pypi.org/project/openapi-python-sdk/) and supports Python 3.10 and above.
+The package is available on [PyPI](https://pypi.org/project/openapi-sdk/) and supports Python 3.10 and above.
 Install it with pip:
 
 ```bash
-pip install openapi-python-sdk
+pip install openapi-sdk
 ```
 
 If you are using Poetry:
 
 ```bash
-poetry add openapi-python-sdk
+poetry add openapi-sdk
 ```
 
 No additional configuration is needed. The only runtime dependency is [`httpx`](https://www.python-httpx.org/).
@@ -71,7 +71,7 @@ Interaction with the Openapi platform happens in two distinct steps.
 Authenticate with your credentials and obtain a short-lived bearer token scoped to the endpoints you need.
 
 ```python
-from openapi_python_sdk import OauthClient
+from openapi_sdk import OauthClient
 
 oauth = OauthClient(username="<your_username>", apikey="<your_apikey>", test=True)
 
@@ -93,7 +93,7 @@ oauth.delete_token(id=token)
 Use the token to make authenticated requests to any Openapi service.
 
 ```python
-from openapi_python_sdk import Client
+from openapi_sdk import Client
 
 client = Client(token=token)
 
@@ -119,7 +119,7 @@ If you need to configure custom retry logic, proxies, or use a different HTTP cl
 ```python
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
-from openapi_python_sdk import Client
+from openapi_sdk import Client
 import requests
 
 retry = Retry(total=3)
@@ -139,7 +139,7 @@ By default, the SDK uses a 30-second timeout for all network requests to avoid h
 You can easily override it passing a `timeout` explicitly during initialization to all client variants:
 
 ```python
-from openapi_python_sdk import Client
+from openapi_sdk import Client
 
 client = Client(token="token", timeout=60.0) # 60 seconds
 ```
@@ -151,7 +151,7 @@ The SDK provides `AsyncClient` and `AsyncOauthClient` for use with asynchronous 
 ### Async Authentication
 
 ```python
-from openapi_python_sdk import AsyncOauthClient
+from openapi_sdk import AsyncOauthClient
 
 async with AsyncOauthClient(username="<your_username>", apikey="<your_apikey>", test=True) as oauth:
     resp = await oauth.create_token(
@@ -164,7 +164,7 @@ async with AsyncOauthClient(username="<your_username>", apikey="<your_apikey>", 
 ### Async Requests
 
 ```python
-from openapi_python_sdk import AsyncClient
+from openapi_sdk import AsyncClient
 
 async with AsyncClient(token=token) as client:
     resp = await client.request(
